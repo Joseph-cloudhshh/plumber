@@ -1,13 +1,9 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Calendar, ArrowRight, X, Clock, ChevronLeft } from "lucide-react";
+import { Calendar, ArrowRight, X, Clock } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-
 import moment from "moment";
-
-const PLACEHOLDER_POSTS = [];
+import { base44 } from "@/api/base44Client";
 
 const CATEGORY_COLORS = {
   Tips: "bg-blue-500/10 text-blue-600",
@@ -24,8 +20,12 @@ export default function Blog() {
 
   useEffect(() => {
     const loadPosts = async () => {
-      const data = await db.entities.BlogPost.list("-created_date", 50);
-      setPosts(data.length > 0 ? data : PLACEHOLDER_POSTS);
+      try {
+        const data = await base44.entities.BlogPost.list("-created_date", 50);
+        setPosts(data);
+      } catch (e) {
+        setPosts([]);
+      }
       document.title = "Plumbing Insights | FlowFix";
       setLoading(false);
     };
@@ -99,6 +99,8 @@ export default function Blog() {
             <div className="flex justify-center py-20">
               <div className="w-8 h-8 border-4 border-muted border-t-cerulean rounded-full animate-spin" />
             </div>
+          ) : posts.length === 0 ? (
+            <div className="text-center py-20 text-muted-foreground">No posts yet. Check back soon.</div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {posts.map((post, i) => (
@@ -128,7 +130,6 @@ export default function Blog() {
                         {moment(post.created_date).format("MMM D, YYYY")}
                       </span>
                     </div>
-
                     <h2 className="font-heading font-semibold text-lg text-foreground mb-3 group-hover:text-cerulean transition-colors leading-snug">
                       {post.title}
                     </h2>
