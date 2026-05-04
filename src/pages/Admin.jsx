@@ -1,10 +1,10 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import { useState, useEffect } from "react";
-
+import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
-import { Users, MessageSquare, FileText, Clock, CheckCircle2, Phone, Mail, Calendar, Droplets } from "lucide-react";
+import { Users, MessageSquare, FileText, Clock, CheckCircle2, Phone, Mail, Calendar, Droplets, Lock } from "lucide-react";
 import moment from "moment";
+
+const ADMIN_PIN = "6334";
 
 const STATUS_COLORS = {
   new: "bg-blue-100 text-blue-700",
@@ -17,32 +17,118 @@ const STATUS_COLORS = {
   cancelled: "bg-red-100 text-red-700",
 };
 
+function PinGate({ onUnlock }) {
+  const [digits, setDigits] = useState(["", "", "", ""]);
+  const [error, setError] = useState(false);
+
+  const handleDigit = (index, value) => {
+    if (!/^\d?$/.test(value)) return;
+    const next = [...digits];
+    next[index] = value;
+    setDigits(next);
+    setError(false);
+
+    if (value && index < 3) {
+      document.getElementById(`pin-${index + 1}`)?.focus();
+    }
+
+    if (next.every((d) => d !== "") && value) {
+      const entered = next.join("");
+      if (entered === ADMIN_PIN) {
+        onUnlock();
+      } else {
+        setError(true);
+        setTimeout(() => {
+          setDigits(["", "", "", ""]);
+          setError(false);
+          document.getElementById("pin-0")?.focus();
+        }, 700);
+      }
+    }
+  };
+
+  const handleKeyDown = (index, e) => {
+    if (e.key === "Backspace" && !digits[index] && index > 0) {
+      document.getElementById(`pin-${index - 1}`)?.focus();
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white rounded-2xl border border-slate-200 p-10 flex flex-col items-center gap-6 w-full max-w-sm"
+      >
+        <div className="w-12 h-12 rounded-xl bg-obsidian flex items-center justify-center">
+          <Lock className="w-5 h-5 text-white" />
+        </div>
+        <div className="text-center">
+          <h1 className="font-heading font-semibold text-slate-800 text-lg">Admin Access</h1>
+          <p className="text-slate-500 text-sm mt-1">Enter your 4-digit PIN to continue</p>
+        </div>
+        <div className="flex gap-3">
+          {digits.map((d, i) => (
+            <input
+              key={i}
+              id={`pin-${i}`}
+              type="password"
+              inputMode="numeric"
+              maxLength={1}
+              value={d}
+              autoFocus={i === 0}
+              onChange={(e) => handleDigit(i, e.target.value)}
+              onKeyDown={(e) => handleKeyDown(i, e)}
+              className={`w-12 h-14 text-center text-xl font-bold rounded-xl border-2 outline-none transition-all bg-slate-50 focus:bg-white focus:border-cerulean ${
+                error ? "border-red-400 bg-red-50 text-red-600" : "border-slate-200 text-slate-800"
+              }`}
+            />
+          ))}
+        </div>
+        {error && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-red-500 text-sm font-medium"
+          >
+            Incorrect PIN
+          </motion.p>
+        )}
+      </motion.div>
+    </div>
+  );
+}
+
 export default function Admin() {
+  const [unlocked, setUnlocked] = useState(false);
   const [tab, setTab] = useState("contacts");
   const [contacts, setContacts] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!unlocked) return;
     const load = async () => {
       const [c, b] = await Promise.all([
-        db.entities.ContactSubmission.list("-created_date", 100),
-        db.entities.Booking.list("-created_date", 100),
+        base44.entities.ContactSubmission.list("-created_date", 100),
+        base44.entities.Booking.list("-created_date", 100),
       ]);
       setContacts(c);
       setBookings(b);
       setLoading(false);
     };
     load();
-  }, []);
+  }, [unlocked]);
+
+  if (!unlocked) return <PinGate onUnlock={() => setUnlocked(true)} />;
 
   const updateContactStatus = async (id, status) => {
-    await db.entities.ContactSubmission.update(id, { status });
+    await base44.entities.ContactSubmission.update(id, { status });
     setContacts((prev) => prev.map((c) => (c.id === id ? { ...c, status } : c)));
   };
 
   const updateBookingStatus = async (id, status) => {
-    await db.entities.Booking.update(id, { status });
+    await base44.entities.Booking.update(id, { status });
     setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, status } : b)));
   };
 
