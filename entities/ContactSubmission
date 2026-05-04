@@ -1,0 +1,55 @@
+{
+  "name": "ContactSubmission",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "Name"
+    },
+    "phone": {
+      "type": "string",
+      "title": "Phone"
+    },
+    "email": {
+      "type": "string",
+      "title": "Email"
+    },
+    "service_needed": {
+      "type": "string",
+      "title": "Service Needed",
+      "enum": [
+        "Emergency Plumbing",
+        "Leak Detection",
+        "Drain Cleaning",
+        "Water Heater",
+        "Sewer Line",
+        "Pipe Installation",
+        "Toilet Repair",
+        "Faucet & Sink",
+        "Garbage Disposal",
+        "Commercial Plumbing",
+        "Other"
+      ]
+    },
+    "message": {
+      "type": "string",
+      "title": "Message"
+    },
+    "status": {
+      "type": "string",
+      "title": "Status",
+      "enum": [
+        "new",
+        "contacted",
+        "scheduled",
+        "completed"
+      ],
+      "default": "new"
+    }
+  },
+  "required": [
+    "name",
+    "phone",
+    "service_needed"
+  ]
+}

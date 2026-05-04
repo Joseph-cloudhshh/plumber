@@ -1,0 +1,77 @@
+{
+  "name": "Booking",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "Full Name"
+    },
+    "phone": {
+      "type": "string",
+      "title": "Phone"
+    },
+    "email": {
+      "type": "string",
+      "title": "Email"
+    },
+    "service": {
+      "type": "string",
+      "title": "Service",
+      "enum": [
+        "Emergency Plumbing",
+        "Leak Detection",
+        "Drain Cleaning",
+        "Water Heater",
+        "Sewer Line",
+        "Pipe Installation",
+        "Toilet Repair",
+        "Faucet & Sink",
+        "Garbage Disposal",
+        "Commercial Plumbing"
+      ]
+    },
+    "preferred_date": {
+      "type": "string",
+      "title": "Preferred Date"
+    },
+    "preferred_time": {
+      "type": "string",
+      "title": "Preferred Time",
+      "enum": [
+        "Morning (8-12)",
+        "Afternoon (12-5)",
+        "Evening (5-8)",
+        "ASAP - Emergency"
+      ]
+    },
+    "description": {
+      "type": "string",
+      "title": "Problem Description"
+    },
+    "photo_url": {
+      "type": "string",
+      "title": "Photo URL"
+    },
+    "address": {
+      "type": "string",
+      "title": "Service Address"
+    },
+    "status": {
+      "type": "string",
+      "title": "Status",
+      "enum": [
+        "pending",
+        "confirmed",
+        "in_progress",
+        "completed",
+        "cancelled"
+      ],
+      "default": "pending"
+    }
+  },
+  "required": [
+    "name",
+    "phone",
+    "service"
+  ]
+}
